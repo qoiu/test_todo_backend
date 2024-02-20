@@ -1,6 +1,9 @@
 package com.itpw.todo_backend
 
 import com.itpw.todo_backend.authorization.SecurityFilter
+import com.itpw.todo_backend.utils.DetailException
+import com.itpw.todo_backend.utils.DetailsResponse
+import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -8,11 +11,16 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.crossstore.ChangeSetPersister
+import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.annotation.ControllerAdvice
+import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -60,7 +68,7 @@ class AppConfiguration @Autowired constructor(
 //					.anyRequest().authenticated()
 //			}
 			.authorizeHttpRequests()
-			.requestMatchers("/media/get/**", "/authorization/**", "/hello/**", "/articles/articles/by_id/**", "/ws/**", "/itpw-docs/**", "/mono/**")
+			.requestMatchers("/media/get/**", "/authorization/**", "/articles/articles/by_id/**", "/ws/**", "/itpw-docs/**", "/mono/**")
 			.permitAll()
 			.anyRequest()
 			.authenticated()
@@ -83,3 +91,38 @@ class AppConfiguration @Autowired constructor(
 
 }
 
+
+@ControllerAdvice
+class GlobalExceptionHandler {
+	@ExceptionHandler(Exception::class)
+	fun handleException(e: Exception): ResponseEntity<DetailsResponse> {
+		e.printStackTrace()
+		return ResponseEntity.badRequest().body(DetailsResponse("Произошла ошибка"))
+	}
+
+	@ExceptionHandler(ConstraintViolationException::class)
+	fun handleConstraintViolationException(e: ConstraintViolationException): ResponseEntity<DetailsResponse> {
+		return ResponseEntity.badRequest().body(DetailsResponse(e.constraintViolations.first().message))
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException::class)
+	fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<DetailsResponse> {
+		return ResponseEntity.badRequest().body(DetailsResponse(e.bindingResult?.fieldErrors?.first()?.defaultMessage ?: ""))
+	}
+
+	@ExceptionHandler(DetailException::class)
+	fun handleDetailException(e: DetailException): ResponseEntity<DetailsResponse> {
+		return ResponseEntity.badRequest().body(DetailsResponse(e.details))
+	}
+
+
+//	@ExceptionHandler(ChangeSetPersister.NotFoundException::class)
+//	fun handleNotFoundException(e: ChangeSetPersister.NotFoundException): ResponseEntity<DetailsResponse> {
+//		return ResponseEntity.status(404).body(DetailsResponse(e.details))
+//	}
+
+//	@ExceptionHandler(ForbiddenException::class)
+//	fun handleForbiddenException(e: ForbiddenException): ResponseEntity<DetailsResponse> {
+//		return ResponseEntity.status(403).body(DetailsResponse(e.details))
+//	}
+}

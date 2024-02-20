@@ -1,7 +1,9 @@
 package com.itpw.todo_backend.authorization
 
+import com.itpw.todo_backend.utils.log
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.UnsupportedEncodingException
@@ -24,16 +26,18 @@ class JwtSigner {
 
     // TODO: заполнить application.properties
 
-    fun generateToken(username: String?): String? {
+
+    fun createJwt(userId: String): String {
         return Jwts.builder()
-            .setSubject(username)
-            .setIssuedAt(Date())
+            .setSubject(userId)
+            .setIssuer(issuer)
+            .setIssuedAt(Date.from(Instant.now()))
             .setExpiration(Date.from(Instant.now().plus(Duration.ofSeconds(timeToLive.toLong()))))
             .signWith(secretKey)
             .compact()
     }
 
-
+    @PostConstruct
     fun setUpSecretKey() {
         secretKey = try {
             Keys.hmacShaKeyFor(secret.toByteArray(charset("UTF-8")))
@@ -43,10 +47,14 @@ class JwtSigner {
     }
 
     fun getJwtSubject(jwt: String): String {
-        return Jwts.parserBuilder()
+        log.info("jwt: $jwt")
+        log.info("secretKey: $secretKey")
+        val body = Jwts.parserBuilder()
             .setSigningKey(secretKey)
             .build()
             .parseClaimsJws(jwt)
+        log.info("body: $body")
+        return body
             .body
             .subject
     }

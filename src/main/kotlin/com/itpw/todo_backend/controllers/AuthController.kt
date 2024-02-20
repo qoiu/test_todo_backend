@@ -3,15 +3,17 @@ package com.itpw.todo_backend.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.itpw.todo_backend.authorization.AuthenticationService
 import com.itpw.todo_backend.authorization.JwtSigner
+import com.itpw.todo_backend.controllers.user.UserResponse
 import com.itpw.todo_backend.models.AuthRequest
+import com.itpw.todo_backend.utils.DetailException
 import com.itpw.todo_backend.utils.log
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
 import java.util.*
-import java.util.logging.Logger
 
 
 @RestController
@@ -22,27 +24,29 @@ class AuthController(
 ) {
     private val objectMapper = ObjectMapper()
 
+    private val passwordEncoder = BCryptPasswordEncoder()
+
     @PostMapping("/login/")
     fun login(
         @RequestBody request: AuthRequest
-    ):String{
-        val restTemplate = RestTemplate()
-        jwtSigner.setUpSecretKey()
-        this@AuthController.log.info("createUser")
-        Logger.getLogger("sds").warning("createUser")
-        authenticationService.createUser(request.login, request.password)
-//        val user = restTemplate.exchange<String>(
-//            "http://localhost:8084/user/get_or_create/",
-//            HttpMethod.POST,
-//            HttpEntity<GetOrCreateProfileRequest>(GetOrCreateProfileRequest(body.phone.filter { it.isDigit() }, body.role))
-//        ).body!!
-//        val userObj = objectMapper.readValue(
-//            user,
-//            object : com.fasterxml.jackson.core.type.TypeReference<Map<String, Any>>() {})
-//        authenticationService.createUser(request.login)
-//        val token = jwtSigner.generateToken(request.login)
-        return "get $request"
-//        return "get $request -> $token"
+    ):UserResponse{
+        log.info("createUser: ${request.login} - ${passwordEncoder.encode(request.password)}")
+        val getUser = authenticationService.findUser(request.login)
+        return if(getUser!=null) {
+            val correctPassword = passwordEncoder.matches(request.password, getUser.password)
+            log.info("haveUser: $correctPassword")
+            if(correctPassword){
+                val token = jwtSigner.createJwt(getUser!!.id.toString())
+                UserResponse(request.login, token!!)
+            }else {
+                throw DetailException("Неправильный логин или пароль")
+            }
+        }else {
+            log.info("find: $getUser")
+            val user = authenticationService.createUser(request.login, passwordEncoder.encode(request.password))
+            val token = jwtSigner.createJwt(user.id.toString())
+            UserResponse(request.login, token)
+        }
     }
 
 //    @PostMapping("/login/")

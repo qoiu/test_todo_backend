@@ -1,5 +1,6 @@
 package com.itpw.todo_backend.authorization
 
+import com.itpw.todo_backend.controllers.user.User
 import com.itpw.todo_backend.repository.AuthenticationUserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -12,8 +13,12 @@ class AuthenticationService @Autowired constructor(
 //    private val authenticationUserProvider: AuthenticationUserProvider
 ) {
 
-    fun createUser(name: String, password: String){
-        userRepository.save(AuthenticationUser(-1L,name,password))
+    fun createUser(name: String, password: String): User{
+        return userRepository.save(User(login = name, password = password))
+    }
+
+    fun findUser(login: String): User?{
+        return userRepository.findByLogin(login)
     }
 
 
