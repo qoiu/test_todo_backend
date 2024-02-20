@@ -13,5 +13,6 @@ class AuthenticationUser (
     )
     val id: Long = -1L,
     val name: String,
+    val password: String,
 
 )

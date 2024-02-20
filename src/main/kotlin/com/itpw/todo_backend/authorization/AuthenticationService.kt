@@ -11,10 +11,9 @@ class AuthenticationService @Autowired constructor(
     private val jwtSigner: JwtSigner,
 //    private val authenticationUserProvider: AuthenticationUserProvider
 ) {
-//    private val passwordEncoder = BCryptPasswordEncoder()
 
-    fun createUser(name: String){
-        userRepository.save(AuthenticationUser(-1L,name))
+    fun createUser(name: String, password: String){
+        userRepository.save(AuthenticationUser(-1L,name,password))
     }
 
 

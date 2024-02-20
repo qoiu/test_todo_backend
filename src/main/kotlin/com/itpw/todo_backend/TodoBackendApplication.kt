@@ -1,6 +1,7 @@
 package com.itpw.todo_backend
 
 import com.itpw.todo_backend.authorization.SecurityFilter
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -12,9 +13,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.springframework.web.filter.CommonsRequestLoggingFilter
 
 @SpringBootApplication
-class TodoBackendApplication
+class TodoBackendApplication{
+
+	companion object{
+		val log = LoggerFactory.getLogger(TodoBackendApplication::class.java)
+	}
+}
 
 fun main(args: Array<String>) {
 	runApplication<TodoBackendApplication>(*args)
@@ -28,7 +38,16 @@ class AppConfiguration @Autowired constructor(
 ){
 
 	@Bean
-	@Throws(java.lang.Exception::class)
+	fun logFilter(): CommonsRequestLoggingFilter {
+		return CommonsRequestLoggingFilter().apply {
+			setIncludeQueryString(true)
+			setIncludePayload(true)
+			setIncludeHeaders(true)
+			setMaxPayloadLength(100_000)
+		}
+	}
+
+	@Bean
 	fun configure(http: HttpSecurity): SecurityFilterChain? {
 		http
 			.cors {  }.csrf().disable().exceptionHandling()
@@ -48,5 +67,19 @@ class AppConfiguration @Autowired constructor(
 			http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter::class.java)
 		return http.build()
 	}
+
+
+	@Bean
+	fun corsConfigurationSource(): CorsConfigurationSource {
+		val configuration = CorsConfiguration()
+		configuration.allowedOriginPatterns = listOf("*")
+		configuration.setMaxAge(3600L)
+		configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE")
+		configuration.addAllowedHeader("*")
+		val source = UrlBasedCorsConfigurationSource()
+		source.registerCorsConfiguration("/**", configuration)
+		return source
+	}
+
 }
 
