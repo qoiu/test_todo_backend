@@ -19,12 +19,28 @@ data class TaskResponse(
     var startTime: Calendar = Calendar.getInstance(),
     @JsonProperty
     var owner: UserNameResponse,
+    @JsonProperty
+    var watchers: List<UserNameResponse>,
 ) {
     constructor(task: Task) : this(
         id = task.id,
         title = task.title,
         description = task.description,
         startTime = task.startTime,
-        owner=UserNameResponse(task.owner)
+        owner = UserNameResponse(task.owner),
+        watchers = task.observers.map { UserNameResponse(it) }
+    )
+}
+
+data class EditTask(
+    val title: String? = null,
+    val description: String? = null,
+    val watchers: List<Long>? = null
+){
+    fun toTask(owner: User, observers: List<User>) = Task(
+        title = this.title?:"",
+        description = this.description?:"",
+        owner = owner,
+        observers = observers
     )
 }

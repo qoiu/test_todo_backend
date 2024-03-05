@@ -5,7 +5,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.4"
 	kotlin("jvm") version "1.9.22"
 	kotlin("plugin.spring") version "1.9.22"
-//	kotlin("plugin.jpa") version "1.9.22"
+	kotlin("plugin.jpa") version "1.9.22"
 }
 
 group = "com.itpw"
@@ -43,6 +43,10 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.1")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.1")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+
+
+	implementation("org.apache.httpcomponents.client5:httpclient5:5.1.3")
+	implementation("org.apache.httpcomponents:httpclient:4.5.14")
 }
 
 tasks.withType<KotlinCompile> {

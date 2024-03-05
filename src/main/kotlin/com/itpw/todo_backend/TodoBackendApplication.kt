@@ -1,8 +1,7 @@
 package com.itpw.todo_backend
 
 import com.itpw.todo_backend.authorization.SecurityFilter
-import com.itpw.todo_backend.utils.DetailException
-import com.itpw.todo_backend.utils.DetailsResponse
+import com.itpw.todo_backend.utils.*
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,7 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.crossstore.ChangeSetPersister
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -89,6 +87,12 @@ class AppConfiguration @Autowired constructor(
 		return source
 	}
 
+
+	@Bean
+	fun pagingFormatter(): PagingFormatter {
+		return PagingFormatter()
+	}
+
 }
 
 
@@ -116,13 +120,13 @@ class GlobalExceptionHandler {
 	}
 
 
-//	@ExceptionHandler(ChangeSetPersister.NotFoundException::class)
-//	fun handleNotFoundException(e: ChangeSetPersister.NotFoundException): ResponseEntity<DetailsResponse> {
-//		return ResponseEntity.status(404).body(DetailsResponse(e.details))
-//	}
+	@ExceptionHandler(NotFoundException::class)
+	fun handleNotFoundException(e: NotFoundException): ResponseEntity<DetailsResponse> {
+		return ResponseEntity.status(404).body(DetailsResponse(e.details))
+	}
 
-//	@ExceptionHandler(ForbiddenException::class)
-//	fun handleForbiddenException(e: ForbiddenException): ResponseEntity<DetailsResponse> {
-//		return ResponseEntity.status(403).body(DetailsResponse(e.details))
-//	}
+	@ExceptionHandler(ForbiddenException::class)
+	fun handleForbiddenException(e: ForbiddenException): ResponseEntity<DetailsResponse> {
+		return ResponseEntity.status(403).body(DetailsResponse(e.details))
+	}
 }

@@ -40,7 +40,6 @@ class SecurityFilter @Autowired constructor(
         log.info("jwt: $jwt")
         if(!jwt.isNullOrBlank()){
             val userId = tokenProvider.getJwtSubject(jwt).toLong()
-            newRequest.setAttribute("id", userId)
             log.info("userId: $userId")
             newRequest.addHeader("user-id", userId.toString())
             val userDetails = userRepository.findByIdOrNull(userId)?.let {
@@ -84,9 +83,7 @@ class SecurityFilter @Autowired constructor(
             }
 
         }
-        filterChain.doFilter(request, response)
-
-
+        filterChain.doFilter(newRequest, response)
     }
 
 }

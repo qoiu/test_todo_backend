@@ -42,10 +42,11 @@ class AuthController(
                 throw DetailException("Неправильный логин или пароль")
             }
         }else {
-            log.info("find: $getUser")
-            val user = authenticationService.createUser(request.login, passwordEncoder.encode(request.password))
-            val token = jwtSigner.createJwt(user.id.toString())
-            UserResponse(request.login, token)
+            throw DetailException("Неправильный логин или пароль")
+//            log.info("find: $getUser")
+//            val user = authenticationService.createUser(request.login, passwordEncoder.encode(request.password))
+//            val token = jwtSigner.createJwt(user.id.toString())
+//            UserResponse(request.login, token)
         }
     }
 
