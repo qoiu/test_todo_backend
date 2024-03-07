@@ -1,25 +1,21 @@
-package com.itpw.todo_backend.controllers.task
+package com.itpw.todo_backend.task
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.itpw.todo_backend.controllers.user.User
-import com.itpw.todo_backend.controllers.user.UserNameResponse
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Temporal
-import jakarta.persistence.TemporalType
+import com.itpw.todo_backend.user.UserNameResponse
 import java.util.*
 
 data class TaskResponse(
-    @JsonProperty
+    @JsonProperty("id")
     val id: Long = -1L,
-    @JsonProperty
+    @JsonProperty("title")
     var title: String? = null,
-    @JsonProperty
+    @JsonProperty("description")
     var description: String? = null,
-    @JsonProperty
+    @JsonProperty("start_time")
     var startTime: Calendar = Calendar.getInstance(),
-    @JsonProperty
+    @JsonProperty("owner")
     var owner: UserNameResponse,
-    @JsonProperty
+    @JsonProperty("watchers")
     var watchers: List<UserNameResponse>,
 ) {
     constructor(task: Task) : this(
@@ -33,14 +29,10 @@ data class TaskResponse(
 }
 
 data class EditTask(
+    @JsonProperty("title")
     val title: String? = null,
+    @JsonProperty("description")
     val description: String? = null,
+    @JsonProperty("watchers")
     val watchers: List<Long>? = null
-){
-    fun toTask(owner: User, observers: List<User>) = Task(
-        title = this.title?:"",
-        description = this.description?:"",
-        owner = owner,
-        observers = observers
-    )
-}
+)

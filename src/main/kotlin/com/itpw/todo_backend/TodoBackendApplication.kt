@@ -10,12 +10,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.support.ResourceBundleMessageSource
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -23,6 +25,9 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CommonsRequestLoggingFilter
+import org.springframework.web.servlet.LocaleResolver
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver
+import java.util.*
 
 @SpringBootApplication
 class TodoBackendApplication{
@@ -42,6 +47,34 @@ fun main(args: Array<String>) {
 class AppConfiguration @Autowired constructor(
 	private val filter: SecurityFilter
 ){
+
+	@Bean
+	fun messageSource(): ResourceBundleMessageSource {
+		val rs = ResourceBundleMessageSource()
+		rs.setBasenames("messages")
+		rs.setDefaultEncoding("UTF-8")
+		rs.setUseCodeAsDefaultMessage(true)
+		return rs
+	}
+
+	@Bean
+	fun validator(messageSource: ResourceBundleMessageSource): LocalValidatorFactoryBean {
+		val validator = LocalValidatorFactoryBean()
+		validator.setValidationMessageSource(messageSource)
+		return validator
+	}
+
+	@Bean
+	fun localeResolver(): LocaleResolver {
+		val resolver = AcceptHeaderLocaleResolver()
+		resolver.supportedLocales = listOf(
+			Locale("ru")
+		)
+		resolver.setDefaultLocale(
+			Locale("ru")
+		)
+		return resolver
+	}
 
 	@Bean
 	fun logFilter(): CommonsRequestLoggingFilter {
@@ -66,7 +99,7 @@ class AppConfiguration @Autowired constructor(
 //					.anyRequest().authenticated()
 //			}
 			.authorizeHttpRequests()
-			.requestMatchers("/media/get/**", "/authorization/**", "/articles/articles/by_id/**", "/ws/**", "/itpw-docs/**", "/mono/**")
+			.requestMatchers("/authorization/**",)
 			.permitAll()
 			.anyRequest()
 			.authenticated()
@@ -79,7 +112,7 @@ class AppConfiguration @Autowired constructor(
 	fun corsConfigurationSource(): CorsConfigurationSource {
 		val configuration = CorsConfiguration()
 		configuration.allowedOriginPatterns = listOf("*")
-		configuration.setMaxAge(3600L)
+        configuration.maxAge = 3600L
 		configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE")
 		configuration.addAllowedHeader("*")
 		val source = UrlBasedCorsConfigurationSource()
@@ -111,7 +144,7 @@ class GlobalExceptionHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException::class)
 	fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<DetailsResponse> {
-		return ResponseEntity.badRequest().body(DetailsResponse(e.bindingResult?.fieldErrors?.first()?.defaultMessage ?: ""))
+		return ResponseEntity.badRequest().body(DetailsResponse(e.bindingResult.fieldErrors?.first()?.defaultMessage ?: ""))
 	}
 
 	@ExceptionHandler(DetailException::class)

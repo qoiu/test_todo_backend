@@ -1,6 +1,5 @@
 package com.itpw.todo_backend.authorization
 
-import com.itpw.todo_backend.repository.AuthenticationUserRepository
 import com.itpw.todo_backend.utils.RequestWithAuth
 import com.itpw.todo_backend.utils.log
 import jakarta.servlet.FilterChain
@@ -22,9 +21,6 @@ class SecurityFilter @Autowired constructor(
     private val tokenProvider: JwtSigner,
     private val userRepository: AuthenticationUserRepository
 ): OncePerRequestFilter() {
-    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        return super.shouldNotFilter(request)
-    }
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -40,8 +36,6 @@ class SecurityFilter @Autowired constructor(
         log.info("jwt: $jwt")
         if(!jwt.isNullOrBlank()){
             val userId = tokenProvider.getJwtSubject(jwt).toLong()
-            log.info("userId: $userId")
-            newRequest.addHeader("user-id", userId.toString())
             val userDetails = userRepository.findByIdOrNull(userId)?.let {
                 object : UserDetails {
                     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
@@ -49,7 +43,7 @@ class SecurityFilter @Autowired constructor(
                     }
 
                     override fun getPassword(): String {
-                        return it.password ?: ""
+                        return it.password
                     }
 
                     override fun getUsername(): String {
